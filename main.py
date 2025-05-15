@@ -5,7 +5,12 @@ from pathlib import Path
 
 solutions = Path('solutions')
 generator = Path('generator')
+tmp = Path('tmp')
 tests = Path('tests')
+
+def exec_cmd(name):
+    a = tmp / name
+    return ([a] if os.name == 'nt' else [f'./{a}'])
 
 def compile(file, name):
     try:
@@ -50,23 +55,26 @@ def comp(a, b):
     return "Frieren da Best"
 
 def main():
+    if not tmp.exists():
+        tmp.mkdir(parents=True, exist_ok=True)
+    
     files = [[solutions / 'ac.cpp', 'ac', False],
              [solutions / 'wa.cpp', 'wa', True]]
-    if not compile(generator / 'gen.cpp', 'gen'):
+    if not compile(generator / 'gen.cpp', tmp / 'gen'):
         return
     for [a, b, c] in files:
-        if not (compile(a, b)):
+        if not (compile(a, tmp / b)):
             return
     
     t = 0
     while True:
-        run(['gen'], output = tests / 'in.txt')
+        run(exec_cmd('gen'), output = tests / 'in.txt')
         if not os.path.exists(tests / 'in.txt') or os.path.getsize(tests / 'in.txt') == 0:
             print("[GEN] -> Generated Failed")
             break
             
         for [a, b, c] in files:
-            re = run([b], input = tests / 'in.txt', output = tests / f'{b}out.txt', timelimit = 3)
+            re = run(exec_cmd(b), input = tests / 'in.txt', output = tests / f'{b}out.txt', timelimit = 3)
             if re == "Frieren is Crying":
                 print(f"[TLE] -> While Running on {a}")
                 return
